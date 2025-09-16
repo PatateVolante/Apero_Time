@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffffff">
+    <title>🍻 Apéro Time</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .country-time {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .apero-message {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+        .apero-now {
+            font-size: 1.2em;
+            color: #108610;
+            margin: 20px 0;
+        }
+        footer {  /* Style pour le footer */
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Apéro Time</h1>
+        <div id="country-time" class="country-time">Chargement...</div>
+        <div id="apero-message" class="apero-message">Chargement...</div>
+        <div id="apero-now" class="apero-now" style="display: none;">L'apéro est en cours à : </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris';
+        const country = userTimezone.split('/')[1].replace('_', ' ');
+        const localTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('country-time').textContent = `À ${country}, il est ${localTime}`;
+
+        fetch('/api/apero-time')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP : ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const aperoMessage = document.getElementById('apero-message');
+                const aperoNowElement = document.getElementById('apero-now');
+
+                if (data.is_apero_time) {
+                    aperoMessage.textContent = 'Il est l\'heure de l\'apéro ! 🍻 Santé !';
+                } else {
+                    aperoMessage.textContent = 'Ici il n\'est pas encore l\'heure de l\'apéro 😭 Patience !';
+                }
+
+                if (data.apero_now_city) {
+                    aperoNowElement.style.display = 'block';
+                    aperoNowElement.textContent = `L'apéro est en cours à : ${data.apero_now_city.city} (${data.apero_now_city.country})`;
+                }
+            })
+            .catch(error => {
+                console.error('Erreur détaillée :', error);
+                document.getElementById('apero-message').textContent = `Erreur : ${error.message}`;
+            });
+    });
+
+    </script>
+
+<footer>  <!-- Ajoute cette section -->
+    Powered by <strong>PatateVolante</strong>
+</footer>
+</body>
+</html>

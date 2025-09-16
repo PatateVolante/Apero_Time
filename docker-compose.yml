@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: apero_time_app
+    networks:
+      - frontend
+    expose:
+      - 5001
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_ENV=production  # Utilise "production" pour éviter les erreurs en environnement réel
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.apero_time_app.entrypoints=websecure"
+      - "traefik.http.routers.apero_time_app.rule=Host(`apero.mars.patatevolante.fr`)"
+      - "traefik.http.routers.apero_time_app.service=apero_time_app"
+      - "traefik.http.services.apero_time_app.loadbalancer.server.port=5001"
+      - "traefik.http.routers.apero_time_app.tls=true"
+      - "traefik.http.routers.apero_time_app.tls.certresolver=patatevolante"
+      - "traefik.docker.network=frontend"
+
+networks:
+  frontend:
+    external: true
