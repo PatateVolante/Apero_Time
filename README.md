@@ -13,8 +13,7 @@
 4. [Installation locale](#-installation-locale)
 5. [Configuration](#-configuration)
 6. [Dockerisation](#-dockerisation)
-7. [Structure du projet](#-structure-du-projet)
-8. [Personnalisation](#-personnalisation)
+7. [Personnalisation](#-personnalisation)
 
 ---
 
@@ -100,12 +99,6 @@ _(Le fichier `requirements.txt` est fourni dans le projet.)_
 ### 3. Arrêter le conteneur
 
 `docker-compose down`
-
----
-
-## 📂 Structure du projet
-
-`apero-time/ ├── app.py                  # Code backend (Flask) ├── templates/ │   └── index.html          # Code frontend (HTML/CSS/JS) ├── Dockerfile              # Configuration Docker ├── docker-compose.yml      # Configuration Docker Compose ├── requirements.txt        # Dépendances Python └── favicon.ico             # Favicon personnalisé`
 
 ---
 
