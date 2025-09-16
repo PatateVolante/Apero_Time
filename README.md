@@ -2,7 +2,7 @@
 
 **Apéro Time** est une application web qui indique si c'est l'heure de l'apéro dans ton fuseau horaire et affiche les villes du monde où l'apéro est déjà en cours.
 
-![Apéro Time Screenshot](https://via.placeholder.com/600x400/ffffff/333333?text=Apéro+Time) *(Remplace par une capture d'écran réelle de ton application)*
+![Apéro Time Screenshot](img/image.png) *(Remplace par une capture d'écran réelle de ton application)*
 
 ---
 
