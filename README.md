@@ -22,10 +22,6 @@
 - **Détection automatique** de l'heure locale pour savoir si c'est l'heure de l'apéro.
 - **Affichage des villes** où l'apéro est déjà en cours (avec une ville aléatoire).
 - **Interface simple et responsive** avec un design épuré.
-- **Favicon personnalisé** avec un emoji 🍻.
-- **Footer** "Powered by PatateVolante".
-- **Dockerisé** pour un déploiement facile.
-- **Compatibilité Traefik** pour une intégration avec un reverse proxy.
 
 ---
 
