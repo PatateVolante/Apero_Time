@@ -41,6 +41,11 @@
             color: #108610;
             margin: 20px 0;
         }
+        .countdown {
+            font-size: 1.2em;
+            margin: 20px 0;
+            color: #d35400;
+        }
         footer {  /* Style pour le footer */
             margin-top: 20px;
             font-size: 0.9em;
@@ -53,46 +58,71 @@
         <h1>Apéro Time</h1>
         <div id="country-time" class="country-time">Chargement...</div>
         <div id="apero-message" class="apero-message">Chargement...</div>
+        <div id="countdown" class="countdown" style="display: none;"></div>
         <div id="apero-now" class="apero-now" style="display: none;">L'apéro est en cours à : </div>
     </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris';
-        const country = userTimezone.split('/')[1].replace('_', ' ');
-        const localTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-        document.getElementById('country-time').textContent = `À ${country}, il est ${localTime}`;
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris';
+            const country = userTimezone.split('/')[1].replace('_', ' ');
+            const localTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('country-time').textContent = `À ${country}, il est ${localTime}`;
 
-        fetch('/api/apero-time')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Erreur HTTP : ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                const aperoMessage = document.getElementById('apero-message');
-                const aperoNowElement = document.getElementById('apero-now');
+            fetch('/api/apero-time')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Erreur HTTP : ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const aperoMessage = document.getElementById('apero-message');
+                    const aperoNowElement = document.getElementById('apero-now');
+                    if (data.is_apero_time) {
+                        aperoMessage.textContent = 'Il est l\'heure de l\'apéro ! 🍻 Santé !';
+                    } else {
+                        aperoMessage.textContent = 'Ici il n\'est pas encore l\'heure de l\'apéro 😭 Patience !';
+                    }
+                    if (data.apero_now_city) {
+                        aperoNowElement.style.display = 'block';
+                        aperoNowElement.textContent = `L'apéro est en cours à : ${data.apero_now_city.city} (${data.apero_now_city.country})`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur détaillée :', error);
+                    document.getElementById('apero-message').textContent = `Erreur : ${error.message}`;
+                });
+        });
 
-                if (data.is_apero_time) {
-                    aperoMessage.textContent = 'Il est l\'heure de l\'apéro ! 🍻 Santé !';
-                } else {
-                    aperoMessage.textContent = 'Ici il n\'est pas encore l\'heure de l\'apéro 😭 Patience !';
-                }
+        function updateCountdown() {
+            const now = new Date();
+            const evening = new Date();
+            evening.setHours(18, 0, 0, 0); // 18h aujourd'hui
 
-                if (data.apero_now_city) {
-                    aperoNowElement.style.display = 'block';
-                    aperoNowElement.textContent = `L'apéro est en cours à : ${data.apero_now_city.city} (${data.apero_now_city.country})`;
-                }
-            })
-            .catch(error => {
-                console.error('Erreur détaillée :', error);
-                document.getElementById('apero-message').textContent = `Erreur : ${error.message}`;
-            });
-    });
+            const countdownElement = document.getElementById('countdown');
+            if (now < evening) {
+                countdownElement.style.display = 'block';
+                const diff = evening - now;
 
+                // Calculer heures, minutes, secondes
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                // Afficher le compte à rebours
+                countdownElement.textContent =
+                    `Temps restant avant l'apéro : ${hours}h ${minutes}m ${seconds}s`;
+            } else {
+                countdownElement.style.display = 'none';
+            }
+        }
+
+        // Mettre à jour le compte à rebours chaque seconde
+        setInterval(updateCountdown, 1000);
+
+        // Appeler la fonction une première fois pour éviter un délai de 1 seconde
+        updateCountdown();
     </script>
-
 <footer>  <!-- Ajoute cette section -->
     Powered by <strong>PatateVolante</strong>
 </footer>
