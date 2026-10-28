@@ -1,134 +1,178 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="akihabara">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#120A24">
+    <meta name="description" content="Compte à rebours avant l'apéro, et où dans le monde il a déjà commencé.">
     <title>🍻 Apéro Time</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-            flex-direction: column;
-        }
-        .container {
-            text-align: center;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #333;
-        }
-        .country-time {
-            font-size: 1.2em;
-            color: #666;
-            margin-bottom: 20px;
-        }
-        .apero-message {
-            font-size: 1.5em;
-            margin: 20px 0;
-        }
-        .apero-now {
-            font-size: 1.2em;
-            color: #108610;
-            margin: 20px 0;
-        }
-        .countdown {
-            font-size: 1.2em;
-            margin: 20px 0;
-            color: #d35400;
-        }
-        footer {  /* Style pour le footer */
-            margin-top: 20px;
-            font-size: 0.9em;
-            color: #666;
-        }
-        .footer-version {  /* Style pour les éléments du footer */
-            text-align: center;
-        }
-    </style>
+    <link rel="icon" href="{{ url_for('favicon') }}" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600&family=Tilt+Neon&family=VT323&family=Major+Mono+Display&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ version }}">
 </head>
 <body>
-    <div class="container">
-        <h1>Apéro Time</h1>
-        <div id="country-time" class="country-time">Chargement...</div>
-        <div id="apero-message" class="apero-message">Chargement...</div>
-        <div id="countdown" class="countdown" style="display: none;"></div>
-        <div id="apero-now" class="apero-now" style="display: none;">L'apéro est en cours à : </div>
-    </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris';
-            const country = userTimezone.split('/')[1].replace('_', ' ');
-            const localTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('country-time').textContent = `À ${country}, il est ${localTime}`;
+    <div class="fx-rain" aria-hidden="true"></div>
+    <div class="fx-scanlines" aria-hidden="true"></div>
+    <canvas id="confetti" aria-hidden="true"></canvas>
 
-            fetch('/api/apero-time')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Erreur HTTP : ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const aperoMessage = document.getElementById('apero-message');
-                    const aperoNowElement = document.getElementById('apero-now');
-                    if (data.is_apero_time) {
-                        aperoMessage.textContent = 'Il est l\'heure de l\'apéro ! 🍻 Santé !';
-                    } else {
-                        aperoMessage.textContent = 'Ici il n\'est pas encore l\'heure de l\'apéro 😭 Patience !';
-                    }
-                    if (data.apero_now_city) {
-                        aperoNowElement.style.display = 'block';
-                        aperoNowElement.textContent = `L'apéro est en cours à : ${data.apero_now_city.city} (${data.apero_now_city.country})`;
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur détaillée :', error);
-                    document.getElementById('apero-message').textContent = `Erreur : ${error.message}`;
-                });
-        });
+    <header class="topbar">
+        <h1 class="brand neon-sign" data-text="Apéro Time">Apéro Time</h1>
+        <button id="open-settings" class="btn btn-ghost" type="button" aria-controls="settings" aria-expanded="false">
+            <span aria-hidden="true">⚙</span> Réglages
+        </button>
+    </header>
 
-        function updateCountdown() {
-            const now = new Date();
-            const evening = new Date();
-            evening.setHours(18, 0, 0, 0); // 18h aujourd'hui
+    <main class="layout">
+        <section class="hero" aria-labelledby="countdown-title">
+            <p id="where" class="where">Chargement de l'heure locale…</p>
+            <h2 id="countdown-title" class="visually-hidden">Compte à rebours avant l'apéro</h2>
+            <div id="countdown" class="countdown" aria-hidden="true">
+                <span class="cd-part" data-unit="h">--</span><span class="cd-sep">:</span><span class="cd-part" data-unit="m">--</span><span class="cd-sep">:</span><span class="cd-part" data-unit="s">--</span>
+            </div>
+            <p id="stage-text" class="stage-text">&nbsp;</p>
+            <div class="charge" aria-hidden="true">
+                <div class="charge-bar"><div id="charge-fill" class="charge-fill"></div></div>
+                <span id="charge-label" class="charge-label"></span>
+            </div>
+            <p id="my-drink" class="my-drink" hidden></p>
+            <p id="sr-status" class="visually-hidden" aria-live="polite"></p>
+        </section>
 
-            const countdownElement = document.getElementById('countdown');
-            if (now < evening) {
-                countdownElement.style.display = 'block';
-                const diff = evening - now;
+        <section class="crt" aria-label="GIF du moment">
+            <div class="crt-screen">
+                <img id="gif" alt="" hidden>
+                <div id="gif-fallback" class="gif-fallback" aria-hidden="true"></div>
+            </div>
+            <div class="crt-foot">
+                <span id="gif-credit" class="gif-credit"></span>
+                <button id="gif-next" class="btn btn-small" type="button">Autre GIF</button>
+            </div>
+        </section>
 
-                // Calculer heures, minutes, secondes
-                const hours = Math.floor(diff / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        <section class="world" aria-labelledby="world-title">
+            <div class="world-head">
+                <h2 id="world-title">L'apéro dans le monde</h2>
+                <p id="world-count" class="world-count"></p>
+            </div>
+            <div class="world-body">
+                <div id="map" class="map" role="region" aria-label="Carte des villes, néon allumé là où l'apéro a commencé"></div>
+                <aside class="live">
+                    <div id="featured" class="featured" hidden>
+                        <p class="featured-kicker">L'apéro est en cours à</p>
+                        <p class="featured-city"><span id="featured-flag"></span> <span id="featured-name"></span></p>
+                        <p class="featured-time" id="featured-time"></p>
+                        <p class="featured-drink"><span id="featured-emoji" aria-hidden="true"></span> <strong id="featured-drink-name"></strong></p>
+                        <p class="featured-note" id="featured-note"></p>
+                    </div>
+                    <p id="featured-empty" class="featured-empty" hidden>Personne ne trinque pour l'instant. Changez l'heure de l'apéro dans les réglages.</p>
+                    <h3 class="live-title">Aussi en cours</h3>
+                    <ul id="live-list" class="live-list"></ul>
+                </aside>
+            </div>
+        </section>
+    </main>
 
-                // Afficher le compte à rebours
-                countdownElement.textContent =
-                    `Temps restant avant l'apéro : ${hours}h ${minutes}m ${seconds}s`;
-            } else {
-                countdownElement.style.display = 'none';
-            }
-        }
+    <footer class="footer">
+        <span>Powered by <strong>PatateVolante</strong></span>
+        <span class="footer-version">v{{ version }}</span>
+        <span class="footer-small">À consommer avec modération.</span>
+    </footer>
 
-        // Mettre à jour le compte à rebours chaque seconde
-        setInterval(updateCountdown, 1000);
+    <!-- Tiroir de personnalisation -->
+    <div id="settings-backdrop" class="backdrop" hidden></div>
+    <aside id="settings" class="drawer" aria-labelledby="settings-title" aria-hidden="true">
+        <div class="drawer-head">
+            <h2 id="settings-title">Réglages</h2>
+            <button id="close-settings" class="btn btn-ghost" type="button" aria-label="Fermer les réglages">✕</button>
+        </div>
+        <form id="settings-form" class="drawer-body">
+            <fieldset>
+                <legend>Apéro</legend>
+                <label class="field">Heure de l'apéro
+                    <select name="aperoHour" id="set-hour"></select>
+                </label>
+                <label class="field">Fuseau de référence
+                    <select name="refTz" id="set-ref"></select>
+                </label>
+                <label class="check"><input type="checkbox" name="clock24"> Horloge 24 h</label>
+            </fieldset>
 
-        // Appeler la fonction une première fois pour éviter un délai de 1 seconde
-        updateCountdown();
-    </script>
-<footer>  <!-- Ajoute cette section -->
-    <div id="footer-by" class="footer-by">Powered by <strong>PatateVolante</strong></div> 
-    <div id="footer-version" class="footer-version"><strong>v1.1.0</strong></div> 
-</footer>
+            <fieldset>
+                <legend>Thème</legend>
+                <div class="themes" id="set-themes" role="radiogroup" aria-label="Thème"></div>
+                <div class="colors">
+                    <label class="color">Fond <input type="color" name="color.bg"></label>
+                    <label class="color">Néon 1 <input type="color" name="color.a"></label>
+                    <label class="color">Néon 2 <input type="color" name="color.b"></label>
+                    <label class="color">Néon 3 <input type="color" name="color.c"></label>
+                </div>
+                <label class="field">Police de l'enseigne
+                    <select name="font">
+                        <option value="tilt">Tubes néon (Tilt Neon)</option>
+                        <option value="vt">Terminal (VT323)</option>
+                        <option value="mono">Glyphes (Major Mono)</option>
+                        <option value="petch">Tech (Chakra Petch)</option>
+                    </select>
+                </label>
+                <label class="field">Intensité du néon <output name="glowOut"></output>
+                    <input type="range" name="glow" min="0" max="2" step="0.1">
+                </label>
+            </fieldset>
+
+            <fieldset>
+                <legend>Effets</legend>
+                <label class="check"><input type="checkbox" name="fx.rain"> Pluie</label>
+                <label class="check"><input type="checkbox" name="fx.scanlines"> Lignes CRT</label>
+                <label class="check"><input type="checkbox" name="fx.flicker"> Grésillement de l'enseigne</label>
+                <label class="check"><input type="checkbox" name="fx.glitch"> Glitch au changement d'étape</label>
+            </fieldset>
+
+            <fieldset>
+                <legend>Confettis et son</legend>
+                <label class="field">Quantité <output name="confettiOut"></output>
+                    <input type="range" name="confetti.amount" min="50" max="600" step="25">
+                </label>
+                <label class="check"><input type="checkbox" name="confetti.drinks"> Mélanger l'emoji de l'alcool local</label>
+                <label class="check"><input type="checkbox" name="sound"> Bip des 10 dernières secondes</label>
+                <button id="test-confetti" class="btn" type="button">Tester l'explosion</button>
+            </fieldset>
+
+            <fieldset>
+                <legend>GIF</legend>
+                <label class="check"><input type="checkbox" name="gif.enabled"> Afficher un GIF selon le temps restant</label>
+                <details>
+                    <summary>GIF personnalisés par étape</summary>
+                    <p class="hint">Collez l'URL https d'un GIF. Laissez vide pour le choix automatique.</p>
+                    <div id="set-gifs"></div>
+                </details>
+            </fieldset>
+
+            <fieldset>
+                <legend>Carte</legend>
+                <label class="check"><input type="checkbox" name="map.show"> Afficher la carte</label>
+                <label class="check"><input type="checkbox" name="map.night"> Zone de nuit</label>
+                <label class="check"><input type="checkbox" name="map.onlyLive"> Seulement les villes où l'apéro a commencé</label>
+            </fieldset>
+
+            <fieldset>
+                <legend>Sauvegarde</legend>
+                <div class="row">
+                    <button id="export-settings" class="btn" type="button">Exporter</button>
+                    <label class="btn" for="import-settings">Importer</label>
+                    <input id="import-settings" type="file" accept="application/json" class="visually-hidden">
+                    <button id="reset-settings" class="btn btn-danger" type="button">Réinitialiser</button>
+                </div>
+                <p id="settings-msg" class="hint" role="status"></p>
+            </fieldset>
+        </form>
+    </aside>
+
+    <script id="boot" type="application/json">{{ {"aperoHour": apero_hour, "gifEnabled": gif_enabled, "version": version} | tojson }}</script>
+    <script src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"></script>
+    <script src="{{ url_for('static', filename='vendor/leaflet-terminator/L.Terminator.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/app.js') }}?v={{ version }}"></script>
 </body>
 </html>

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build: .
@@ -8,10 +6,16 @@ services:
       - frontend
     expose:
       - 5001
-    volumes:
-      - .:/app
     environment:
-      - FLASK_ENV=production  # Utilise "production" pour éviter les erreurs en environnement réel
+      - APERO_HOUR=18                       # heure de début de l'apéro (0-23)
+      - APERO_END_HOUR=24                   # fin de l'apéro (24 = minuit)
+      - GIPHY_API_KEY=${GIPHY_API_KEY:-}    # optionnel : GIF contextualisés (sinon emoji animé)
+      - CORS_ORIGINS=https://apero.mars.patatevolante.fr
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
     restart: unless-stopped
     labels:
       - "traefik.enable=true"

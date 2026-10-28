@@ -1,131 +1,91 @@
 # Apéro Time 🍻
 
-**Apéro Time** est une application web qui indique si c'est l'heure de l'apéro dans ton fuseau horaire et affiche les villes du monde où l'apéro est déjà en cours.
+**Apéro Time** affiche le compte à rebours avant l'apéro dans ton fuseau horaire, et montre sur une carte du monde où l'apéro a déjà commencé — avec l'alcool local de chaque ville.
 
 ![Apéro Time Screenshot](img/image.png)
 
 ---
 
-## 📋 Table des matières
-1. [Fonctionnalités](#-fonctionnalités)
-2. [Technologies utilisées](#-technologies-utilisées)
-3. [Prérequis](#-prérequis)
-4. [Installation locale](#-installation-locale)
-5. [Configuration](#-configuration)
-6. [Dockerisation](#-dockerisation)
-7. [Personnalisation](#-personnalisation)
+## 🌟 Fonctionnalités (v2.0.0)
+
+- **Style cyberpunk** : enseigne néon, pluie, lignes CRT, grésillement, glitch au changement d'étape.
+- **Personnalisation avancée** (tiroir « Réglages », sauvegardée dans le navigateur) :
+  - 5 thèmes (Nuit d'Akihabara, Synthwave, Terminal, Arasaka, Néo-Kyoto) + couleurs libres ;
+  - police de l'enseigne, intensité du néon, effets activables un par un ;
+  - heure de l'apéro, fuseau de référence (navigateur ou n'importe quelle ville), horloge 12/24 h ;
+  - GIF personnalisé par étape, quantité de confettis, bip des 10 dernières secondes ;
+  - export / import des réglages en JSON, réinitialisation.
+- **Carte interactive** (Leaflet) : 113 villes dans 46 pays, chacune avec son propre fuseau. Néon magenta = apéro en cours, cyan = pas encore. Zone de nuit en temps réel. Clic sur une ville → heure locale, alcool, et « Suivre ce fuseau ».
+- **GIF contextualisé** selon le temps restant (7 étapes : plus de 6 h, 3–6 h, 1–3 h, 15 min–1 h, moins de 15 min, apéro en cours, dernière heure). Via GIPHY si une clé est configurée, sinon emoji animé.
+- **Explosion de confettis** quand le compte à rebours atteint 00:00:00 (avec l'emoji de l'alcool local, et un accord sonore si activé).
+- **Alcool local** par ville (pastis à Marseille, Kölsch à Cologne, Fernet con Coca à Córdoba…), avec repli sur l'alcool emblématique du pays.
+- Sécurité : CSP stricte (aucun script tiers, Leaflet est embarqué), clé GIPHY côté serveur uniquement, conteneur non-root en lecture seule.
 
 ---
 
-## 🌟 Fonctionnalités
-- **Détection automatique** de l'heure locale pour savoir si c'est l'heure de l'apéro.
-- **Affichage des villes** où l'apéro est déjà en cours (avec une ville aléatoire).
-- **Interface simple et responsive** avec un design épuré.
+## 🛠 Technologies
 
----
-
-## 🛠 Technologies utilisées
-- **Backend** : Python 3.9, Flask, Flask-Cors, Pytz
-- **Frontend** : HTML5, CSS3, JavaScript (Vanilla)
-- **Conteneurisation** : Docker, Docker Compose
-- **Reverse Proxy** : Traefik (optionnel)
-- **Gestion des fuseaux horaires** : Base de données intégrée des fuseaux horaires mondiaux.
-
----
-
-## 📌 Prérequis
-- **Pour le développement local** :
-  - Python 3.9+
-  - pip (pour installer les dépendances Python)
-  - Un navigateur web moderne (Chrome, Firefox, Edge, Safari)
-
-- **Pour le déploiement avec Docker** :
-  - Docker et Docker Compose installés ([Installation de Docker](https://docs.docker.com/get-docker/))
-  - Un reverse proxy (Traefik, Nginx) pour la production (optionnel mais recommandé)
+- **Backend** : Python 3.12, Flask 3, Gunicorn, `zoneinfo` (stdlib) + `tzdata`
+- **Frontend** : HTML, CSS, JavaScript (modules ES, sans build), Leaflet 1.9.4 + Leaflet.Terminator (embarqués dans `static/vendor/`)
+- **Fonds de carte** : CARTO `dark_nolabels` (© OpenStreetMap, © CARTO)
+- **Conteneurisation** : Docker, Docker Compose, Traefik
 
 ---
 
 ## 💻 Installation locale
 
-### 1. Cloner le dépôt
 ```bash
-git clone https://github.com/ton-utilisateur/apero-time.git
-cd apero-time
+git clone https://github.com/PatateVolante/Apero_Time.git
+cd Apero_Time
+pip install -r requirements-dev.txt
+python app.py                  # http://localhost:5001
+pytest                         # tests
 ```
 
-### 2. Installer les dépendances Python
+---
 
-`pip install -r requirements.txt`
+## ⚙ Configuration (variables d'environnement)
 
-_(Le fichier `requirements.txt` est fourni dans le projet.)_
+| Variable | Défaut | Rôle |
+|---|---|---|
+| `APERO_HOUR` | `18` | Heure de début de l'apéro (0–23). Modifiable aussi par chaque visiteur dans les réglages. |
+| `APERO_END_HOUR` | `24` | Fin de l'apéro (`24` = minuit). Sert à « Dernière tournée ». |
+| `GIPHY_API_KEY` | *(vide)* | Clé API GIPHY pour les GIF contextualisés. Sans clé : emoji animé. |
+| `GIPHY_RATING` | `pg` | Filtre de contenu GIPHY (`g`, `pg`, `pg-13`, `r`). |
+| `CORS_ORIGINS` | `https://apero.mars.patatevolante.fr` | Origines autorisées sur `/api/*` (séparées par des virgules). |
 
-### 3. Lancer l'application en local
-
-`python app.py`
-
-- L'application sera accessible à l'adresse : [http://localhost:5001](http://localhost:5001/)
+Clé GIPHY : créer une app sur [developers.giphy.com](https://developers.giphy.com/), puis la mettre dans un fichier `.env` à côté du `docker-compose.yml` (voir `.env.example`). Les résultats sont mis en cache 1 h par étape pour ménager le quota.
 
 ---
 
-## ⚙ Configuration
+## 🐳 Docker
 
-### 1. Fichier `app.py`
+```bash
+docker compose build
+docker compose up -d
+```
 
-- **Fuseaux horaires** : Tu peux modifier la liste des pays et villes dans le dictionnaire `timezones` (lignes 8-50).
-- **Heure de l'apéro** : Par défaut, l'apéro commence à 18h. Pour changer cela, modifie la ligne :
-    
-    `is_apero_time = current_time.hour >= 18  # Remplace 18 par l'heure souhaitée`
-    
-
-### 2. Fichier `index.html`
-
-- **Personnalisation du texte** : Modifie les messages dans le JavaScript (lignes 20-30).
-- **Style CSS** : Adapte les couleurs, polices et marges dans la section `<style>` (lignes 6-25).
+> Changement par rapport à la v1 : le code n'est plus monté en volume (`.:/app`), le conteneur tourne en lecture seule. Après un `git pull`, refaire `docker compose up -d --build`.
 
 ---
 
-## 🐳 Dockerisation
+## 🔌 API
 
-### 1. Construire l'image Docker
-
-`docker-compose build`
-
-### 2. Lancer le conteneur
-
-`docker-compose up`
-
-- L'application sera accessible à l'adresse : [http://localhost:5001](http://localhost:5001/)
-
-### 3. Arrêter le conteneur
-
-`docker-compose down`
+| Route | Description |
+|---|---|
+| `GET /api/apero-time?timezone=Europe/Paris&hour=18` | Statut dans le fuseau demandé (`me`), ville mise en avant (`apero_now_city`, stable sur l'heure), statut des 113 villes (`cities`). Les champs v1 `is_apero_time` et `apero_now_city` sont conservés. |
+| `GET /api/gif?stage=live` | GIF pour une étape (`far`, `waiting`, `soon`, `close`, `final`, `live`, `lastcall`). |
+| `GET /healthz` | Sonde de santé. |
 
 ---
 
-## 🎨 Personnalisation
+## 🎨 Personnalisation du code
 
-### 1. Changer l'emoji du favicon
-
-- Remplace le fichier `favicon.ico` par un nouveau favicon généré depuis [emojifavicon.com](https://emojifavicon.com/).
-
-### 2. Modifier le footer
-
-- Dans `index.html`, ligne 35 :
-    
-    `<footer>Powered by <strong>PatateVolante</strong></footer>`
-    
-
-### 3. Ajouter des pays ou villes
-
-- Dans `app.py`, ajoute des entrées au dictionnaire `timezones` (exemple pour ajouter le Portugal) :
-    
-    `'Portugal': {     'timezones': ['Europe/Lisbon', 'Atlantic/Madeira'],     'cities': ['Lisbonne', 'Porto', 'Funchal'] },`
-    
-
-### 4. Changer les couleurs
-
-- Modifie les valeurs CSS dans `index.html` (section `<style>`).
+- **Ajouter une ville** : une ligne dans `_RAW` de `cities.py` (ville, pays, code ISO, fuseau IANA, lat, lon, alcool ou `None` pour l'alcool du pays). Le test `test_all_city_timezones_exist` vérifie le fuseau.
+- **Alcool d'un pays** : `COUNTRY_DRINKS` dans `cities.py`.
+- **Thèmes** : `THEMES` dans `static/js/settings.js`.
+- **Textes des étapes** et emojis de repli : `STAGES` dans `static/js/app.js` ; requêtes GIPHY : `GIF_STAGES` dans `app.py`.
 
 ---
 
-© 2025 PatateVolante. Tous droits réservés.
+À consommer avec modération. © 2026 PatateVolante.
