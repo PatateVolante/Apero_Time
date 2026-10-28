@@ -407,6 +407,7 @@ function ensureMap() {
     if (mapReady || !window.L) return;
     try {
         M.initMap($("#map"), {
+            cartoKey: boot.cartoKey || "",
             flag,
             formatTime: formatClock,
             formatDuration,

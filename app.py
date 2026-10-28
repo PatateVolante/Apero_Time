@@ -31,6 +31,9 @@ APERO_END_HOUR = _env_hour("APERO_END_HOUR", 24, 1, 24)   # fin (24 = minuit)
 if APERO_END_HOUR <= APERO_HOUR:
     APERO_END_HOUR = 24
 GIPHY_API_KEY = os.environ.get("GIPHY_API_KEY", "").strip()
+# Clé CARTO (gratuite, https://carto.com/basemaps/apikey/). Sans clé : tuiles OpenStreetMap.
+# Une clé de tuiles est forcément visible côté navigateur (elle est dans chaque URL de tuile).
+CARTO_API_KEY = os.environ.get("CARTO_API_KEY", "").strip()
 GIPHY_RATING = os.environ.get("GIPHY_RATING", "pg")
 ALLOWED_ORIGINS = [o.strip() for o in os.environ.get(
     "CORS_ORIGINS", "https://apero.mars.patatevolante.fr").split(",") if o.strip()]
@@ -171,6 +174,7 @@ def index():
         version=VERSION,
         apero_hour=APERO_HOUR,
         gif_enabled=bool(GIPHY_API_KEY),
+        carto_key=CARTO_API_KEY,
     )
 
 

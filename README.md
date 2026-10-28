@@ -27,7 +27,7 @@
 
 - **Backend** : Python 3.12, Flask 3, Gunicorn, `zoneinfo` (stdlib) + `tzdata`
 - **Frontend** : HTML, CSS, JavaScript (modules ES, sans build), Leaflet 1.9.4 + Leaflet.Terminator (embarqués dans `static/vendor/`)
-- **Fonds de carte** : CARTO `dark_nolabels` (© OpenStreetMap, © CARTO)
+- **Fonds de carte** : CARTO `dark_nolabels` si `CARTO_API_KEY` est défini (© OpenStreetMap, © CARTO), sinon tuiles OpenStreetMap assombries
 - **Conteneurisation** : Docker, Docker Compose, Traefik
 
 ---
@@ -52,6 +52,7 @@ pytest                         # tests
 | `APERO_END_HOUR` | `24` | Fin de l'apéro (`24` = minuit). Sert à « Dernière tournée ». |
 | `GIPHY_API_KEY` | *(vide)* | Clé API GIPHY pour les GIF contextualisés. Sans clé : emoji animé. |
 | `GIPHY_RATING` | `pg` | Filtre de contenu GIPHY (`g`, `pg`, `pg-13`, `r`). |
+| `CARTO_API_KEY` | *(vide)* | Clé gratuite [CARTO](https://carto.com/basemaps/apikey/) pour le fond de carte sombre. Sans clé : tuiles OpenStreetMap assombries. |
 | `CORS_ORIGINS` | `https://apero.mars.patatevolante.fr` | Origines autorisées sur `/api/*` (séparées par des virgules). |
 
 Clé GIPHY : créer une app sur [developers.giphy.com](https://developers.giphy.com/), puis la mettre dans `.env` (`GIPHY_API_KEY=`). Les résultats sont mis en cache 1 h par étape pour ménager le quota.

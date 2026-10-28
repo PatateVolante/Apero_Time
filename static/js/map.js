@@ -18,11 +18,22 @@ export function initMap(el, opts) {
         attributionControl: true,
     }).setView([25, 10], 2);
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", {
-        subdomains: "abcd",
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    }).addTo(map);
+    const osm = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+    if (opts.cartoKey) {
+        // CARTO exige une clé (?key=) ; sans elle les tuiles portent un filigrane.
+        L.tileLayer(`https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(opts.cartoKey)}`, {
+            subdomains: "abcd",
+            maxZoom: 19,
+            attribution: `${osm} &copy; <a href="https://carto.com/attributions">CARTO</a>`,
+        }).addTo(map);
+    } else {
+        // Repli sans clé : tuiles OSM standard, assombries en CSS (classe osm-tiles).
+        el.classList.add("osm-tiles");
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: osm,
+        }).addTo(map);
+    }
 
     markersLayer = L.layerGroup().addTo(map);
     return map;

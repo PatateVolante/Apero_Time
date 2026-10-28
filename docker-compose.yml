@@ -12,6 +12,7 @@ services:
       APERO_END_HOUR: ${APERO_END_HOUR:-24}
       GIPHY_API_KEY: ${GIPHY_API_KEY:-}
       GIPHY_RATING: ${GIPHY_RATING:-pg}
+      CARTO_API_KEY: ${CARTO_API_KEY:-}
       CORS_ORIGINS: ${CORS_ORIGINS:-}
     read_only: true
     tmpfs:

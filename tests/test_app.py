@@ -106,3 +106,10 @@ def test_gif_proxy_survives_giphy_failure(client, monkeypatch):
     monkeypatch.setattr(apero, "_fetch_giphy", boom)
     apero._gif_cache.clear()
     assert client.get("/api/gif?stage=far").get_json() == {"enabled": True, "gif": None}
+
+
+def test_carto_key_reaches_page(client, monkeypatch):
+    monkeypatch.setattr(apero, "CARTO_API_KEY", "abc123")
+    assert b'"cartoKey": "abc123"' in client.get("/").data
+    monkeypatch.setattr(apero, "CARTO_API_KEY", "")
+    assert b'"cartoKey": ""' in client.get("/").data

@@ -170,7 +170,7 @@
         </form>
     </aside>
 
-    <script id="boot" type="application/json">{{ {"aperoHour": apero_hour, "gifEnabled": gif_enabled, "version": version} | tojson }}</script>
+    <script id="boot" type="application/json">{{ {"aperoHour": apero_hour, "gifEnabled": gif_enabled, "cartoKey": carto_key, "version": version} | tojson }}</script>
     <script src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"></script>
     <script src="{{ url_for('static', filename='vendor/leaflet-terminator/L.Terminator.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/app.js') }}?v={{ version }}"></script>
