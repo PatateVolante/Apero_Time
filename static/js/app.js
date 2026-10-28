@@ -502,6 +502,7 @@ function fillForm() {
     }
     form.elements.glowOut.value = Number(settings.glow).toFixed(1);
     form.elements.confettiOut.value = settings.confetti.amount;
+    form.elements.mapLightOut.value = Number(settings.map.light).toFixed(1);
     for (const b of document.querySelectorAll(".theme-swatch")) {
         b.setAttribute("aria-checked", String(b.dataset.theme === settings.theme));
     }
@@ -573,6 +574,7 @@ form.addEventListener("input", (e) => {
     S.save(settings);
     if (e.target.name === "glow") form.elements.glowOut.value = Number(settings.glow).toFixed(1);
     if (e.target.name === "confetti.amount") form.elements.confettiOut.value = settings.confetti.amount;
+    if (e.target.name === "map.light") form.elements.mapLightOut.value = Number(settings.map.light).toFixed(1);
     applyAll(prev);
 });
 form.addEventListener("change", (e) => {

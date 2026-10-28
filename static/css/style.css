@@ -332,8 +332,9 @@ body.no-map .world-body { grid-template-columns: 1fr; }
 body.no-map .map { display: none; }
 
 .map { min-height: 460px; background: #07040f; position: relative; z-index: 0; isolation: isolate; }
-.map .leaflet-tile-pane { filter: var(--map-filter); }
-.map.osm-tiles .leaflet-tile-pane { filter: invert(1) grayscale(1) brightness(.55) contrast(1.25) var(--map-filter); }
+.map .leaflet-tile-pane { filter: var(--map-filter) brightness(var(--map-light, 1)); }
+/* OSM est clair : inversé (terres sombres, frontières lumineuses) puis teinté au thème */
+.map.osm-tiles .leaflet-tile-pane { filter: invert(1) grayscale(1) brightness(calc(1.3 * var(--map-light, 1))) contrast(1.35) var(--map-filter); }
 .leaflet-container { font-family: var(--ui-font); background: #07040f; }
 .leaflet-control-attribution {
     background: rgba(7, 4, 15, .75) !important;

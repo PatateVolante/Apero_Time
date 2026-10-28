@@ -153,6 +153,9 @@
             <fieldset>
                 <legend>Carte</legend>
                 <label class="check"><input type="checkbox" name="map.show"> Afficher la carte</label>
+                <label class="field">Luminosité du fond de carte <output name="mapLightOut"></output>
+                    <input type="range" name="map.light" min="0.5" max="2" step="0.1">
+                </label>
                 <label class="check"><input type="checkbox" name="map.night"> Zone de nuit</label>
                 <label class="check"><input type="checkbox" name="map.onlyLive"> Seulement les villes où l'apéro a commencé</label>
             </fieldset>

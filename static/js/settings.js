@@ -44,7 +44,7 @@ export function defaults(boot) {
         confetti: { amount: reducedMotion ? 100 : 300, drinks: true },
         sound: false,
         gif: { enabled: true, custom: {} },
-        map: { show: true, night: true, onlyLive: false },
+        map: { show: true, night: true, onlyLive: false, light: 1 },
     };
 }
 
@@ -94,6 +94,7 @@ function validate(s, boot) {
     for (const k of ["bg", "a", "b", "c"]) if (!HEX.test(s.color[k])) s.color[k] = d.color[k];
     s.glow = Math.min(2, Math.max(0, Number(s.glow) || 0));
     s.confetti.amount = Math.min(600, Math.max(50, Number(s.confetti.amount) || d.confetti.amount));
+    s.map.light = Math.min(2, Math.max(0.5, Number(s.map.light) || 1));
     if (typeof s.refTz !== "string") s.refTz = "auto";
     return s;
 }
@@ -134,6 +135,7 @@ export function apply(s) {
     root.style.setProperty("--ink", theme.ink);
     root.style.setProperty("--bg-2", mix(s.color.bg, "#3a2d63", 0.35));
     root.style.setProperty("--glow", String(s.glow));
+    root.style.setProperty("--map-light", String(s.map.light));
     root.style.setProperty("--sign-font", FONTS[s.font]);
     root.style.setProperty("--map-filter", `sepia(.75) hue-rotate(${theme.hue}deg) saturate(2.2) brightness(.95)`);
     root.dataset.theme = s.theme;
