@@ -1,0 +1,20 @@
+# Surcouche Traefik : activée via COMPOSE_FILE dans .env (voir .env.example).
+# Retire le port publié et expose le service derrière Traefik en HTTPS.
+services:
+  apero:
+    ports: !reset []
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-frontend}"
+      - "traefik.http.routers.apero_time.rule=Host(`${APERO_HOST:-apero.mars.patatevolante.fr}`)"
+      - "traefik.http.routers.apero_time.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}"
+      - "traefik.http.routers.apero_time.tls=true"
+      - "traefik.http.routers.apero_time.tls.certresolver=${TRAEFIK_CERTRESOLVER:-patatevolante}"
+      - "traefik.http.services.apero_time.loadbalancer.server.port=5001"
+
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-frontend}
