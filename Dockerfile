@@ -1,5 +1,8 @@
 FROM python:3.12-slim
 
+LABEL org.opencontainers.image.source="https://github.com/PatateVolante/Apero_Time" \
+      org.opencontainers.image.description="Apéro Time — compte à rebours de l'apéro"
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 

@@ -1,32 +1,21 @@
+# Déploiement simple :  cp .env.example .env  &&  docker compose up -d
+# -> http://<serveur>:5001   (Traefik : voir COMPOSE_FILE dans .env.example)
 services:
-  app:
+  apero:
+    image: ghcr.io/patatevolante/apero_time:${APERO_TAG:-latest}
     build: .
-    container_name: apero_time_app
-    networks:
-      - frontend
-    expose:
-      - 5001
+    container_name: apero_time
+    ports:
+      - "${APERO_PORT:-5001}:5001"
     environment:
-      - APERO_HOUR=18                       # heure de début de l'apéro (0-23)
-      - APERO_END_HOUR=24                   # fin de l'apéro (24 = minuit)
-      - GIPHY_API_KEY=${GIPHY_API_KEY:-}    # optionnel : GIF contextualisés (sinon emoji animé)
-      - CORS_ORIGINS=https://apero.mars.patatevolante.fr
+      APERO_HOUR: ${APERO_HOUR:-18}
+      APERO_END_HOUR: ${APERO_END_HOUR:-24}
+      GIPHY_API_KEY: ${GIPHY_API_KEY:-}
+      GIPHY_RATING: ${GIPHY_RATING:-pg}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
     read_only: true
     tmpfs:
       - /tmp
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.apero_time_app.entrypoints=websecure"
-      - "traefik.http.routers.apero_time_app.rule=Host(`apero.mars.patatevolante.fr`)"
-      - "traefik.http.routers.apero_time_app.service=apero_time_app"
-      - "traefik.http.services.apero_time_app.loadbalancer.server.port=5001"
-      - "traefik.http.routers.apero_time_app.tls=true"
-      - "traefik.http.routers.apero_time_app.tls.certresolver=patatevolante"
-      - "traefik.docker.network=frontend"
-
-networks:
-  frontend:
-    external: true

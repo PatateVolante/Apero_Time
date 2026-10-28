@@ -54,18 +54,44 @@ pytest                         # tests
 | `GIPHY_RATING` | `pg` | Filtre de contenu GIPHY (`g`, `pg`, `pg-13`, `r`). |
 | `CORS_ORIGINS` | `https://apero.mars.patatevolante.fr` | Origines autorisées sur `/api/*` (séparées par des virgules). |
 
-Clé GIPHY : créer une app sur [developers.giphy.com](https://developers.giphy.com/), puis la mettre dans un fichier `.env` à côté du `docker-compose.yml` (voir `.env.example`). Les résultats sont mis en cache 1 h par étape pour ménager le quota.
+Clé GIPHY : créer une app sur [developers.giphy.com](https://developers.giphy.com/), puis la mettre dans `.env` (`GIPHY_API_KEY=`). Les résultats sont mis en cache 1 h par étape pour ménager le quota.
 
 ---
 
-## 🐳 Docker
+## 🐳 Déploiement Docker
+
+L'image est construite et publiée automatiquement sur GHCR par GitHub Actions (`ghcr.io/patatevolante/apero_time`, amd64 + arm64) à chaque push sur `main` et à chaque tag `v*`.
+
+### En 3 commandes
 
 ```bash
-docker compose build
-docker compose up -d
+curl -fsSLO https://raw.githubusercontent.com/PatateVolante/Apero_Time/main/docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/PatateVolante/Apero_Time/main/.env.example -o .env
+docker compose up -d          # -> http://<serveur>:5001
 ```
 
-> Changement par rapport à la v1 : le code n'est plus monté en volume (`.:/app`), le conteneur tourne en lecture seule. Après un `git pull`, refaire `docker compose up -d --build`.
+Sans compose :
+
+```bash
+docker run -d --name apero_time --restart unless-stopped --read-only --tmpfs /tmp \
+  -p 5001:5001 -e GIPHY_API_KEY=... ghcr.io/patatevolante/apero_time:latest
+```
+
+### Derrière Traefik
+
+Récupérer aussi `docker-compose.traefik.yml`, puis dans `.env` décommenter `COMPOSE_FILE` et régler `APERO_HOST`, `TRAEFIK_NETWORK`, `TRAEFIK_CERTRESOLVER`. Toujours `docker compose up -d` : le port n'est plus publié, Traefik sert le site en HTTPS.
+
+### Mettre à jour
+
+```bash
+docker compose pull && docker compose up -d
+```
+
+Pour figer une version : `APERO_TAG=2.0.0` dans `.env`.
+
+### Construire soi-même
+
+Depuis un clone du repo : `docker compose up -d --build` (si l'image GHCR est inaccessible, compose la construit automatiquement).
 
 ---
 
